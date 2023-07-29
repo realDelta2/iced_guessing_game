@@ -1,6 +1,6 @@
 use iced::executor::Default;
+use iced::widget::{button, column, text, text_input};
 use iced::Application;
-use iced::widget::{button, text, text_input, column};
 use iced::{Command, Settings, Theme};
 
 use rand::Rng;
@@ -20,11 +20,10 @@ struct GuessingGame {
     hint: String,
 }
 
-
 #[derive(Debug, Clone)]
 enum Message {
     TextSubmit(String), // this is required for text_input to actually reflect the input value
-    Submit
+    Submit,
 }
 
 impl Application for GuessingGame {
@@ -35,12 +34,13 @@ impl Application for GuessingGame {
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
-            GuessingGame {text_input_string: String::from(""), 
-            turn: MAX_TURNS, 
-            winning_number: rand::thread_rng().gen_range(1..=100), 
-            hint: String::from("try inputting a value!")
-        },
-            Command::none()
+            GuessingGame {
+                text_input_string: String::from(""),
+                turn: MAX_TURNS,
+                winning_number: rand::thread_rng().gen_range(1..=100),
+                hint: String::from("try inputting a value!"),
+            },
+            Command::none(),
         )
     }
 
@@ -51,38 +51,42 @@ impl Application for GuessingGame {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::TextSubmit(guess) => self.text_input_string = guess,
-        Message::Submit => {
-            let guess_num = &self.text_input_string.trim().parse::<i32>();
 
-            self.hint = match guess_num {
-                Ok(guess) => {
-                    match guess.cmp(&self.winning_number) {
-                        Ordering::Less => "Too small!",
-                        Ordering::Greater => "Too big!",
-                        Ordering::Equal => "Congradulations you won" }
-                    },
-                    Err(_) => "Try again"
-            }.to_string(); // re-evaluate error handling method
+            Message::Submit => {
+                let guess_num = &self.text_input_string.trim().parse::<i32>();
 
-            self.text_input_string = String::from("");
+                self.hint = match guess_num {
+                    Ok(guess) => {
+                        match guess.cmp(&self.winning_number) {
+                            Ordering::Less => "Too small!",
+                            Ordering::Greater => "Too big!",
+                            Ordering::Equal => "Congradulations you won",
+                        } // this needs to handle logic for winning scene
+                    }
+                    Err(_) => "Try again",
+                }
+                .to_string(); // re-evaluate error handling method
 
-            self.turn -= 1;
+                self.text_input_string = String::from("");
 
-            if self.turn < 1 {
-                panic!("you lost the game!");
+                self.turn -= 1;
+
+                if self.turn < 1 {
+                    panic!("you lost the game!"); // This needs to be logic for the loosing scene
+                }
             }
-
-
-        } }
+        }
         Command::none()
-
-}
+    }
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
         column!(
             text(format!("you have 12 guesses to win!  hint: {}", self.hint)),
-            text_input(&self.hint, &self.text_input_string).on_input(Message::TextSubmit).on_submit(Message::Submit),
+            text_input(&self.hint, &self.text_input_string)
+                .on_input(Message::TextSubmit)
+                .on_submit(Message::Submit),
             text(format!("it has taken you {} turns so far", &self.turn)),
             button("empty")
-        ).into()
+        )
+        .into()
     } // figure out how to handle different screens
 }
