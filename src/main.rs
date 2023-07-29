@@ -10,7 +10,7 @@ fn main() {
     GuessingGame::run(Settings::default()).expect("game failed to run");
 }
 
-const MAX_TURNS: u16 = 12;
+const MAX_TURNS: u16 = 10;
 
 struct GuessingGame {
     text_input_string: String,
@@ -36,7 +36,7 @@ impl Application for GuessingGame {
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
             GuessingGame {text_input_string: String::from(""), 
-            turn: 1, 
+            turn: MAX_TURNS, 
             winning_number: rand::thread_rng().gen_range(1..=100), 
             hint: String::from("try inputting a value!")
         },
@@ -62,9 +62,17 @@ impl Application for GuessingGame {
                         Ordering::Equal => "Congradulations you won" }
                     },
                     Err(_) => "Try again"
-            }.to_string(); // re-evaluate error handling method 
+            }.to_string(); // re-evaluate error handling method
 
-            self.turn += 1;
+            self.text_input_string = String::from("");
+
+            self.turn -= 1;
+
+            if self.turn < 1 {
+                panic!("you lost the game!");
+            }
+
+
         } }
         Command::none()
 
@@ -72,12 +80,9 @@ impl Application for GuessingGame {
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
         column!(
             text(format!("you have 12 guesses to win!  hint: {}", self.hint)),
-            text_input("input guess here", &self.text_input_string).on_input(Message::TextSubmit).on_submit(Message::Submit),
+            text_input(&self.hint, &self.text_input_string).on_input(Message::TextSubmit).on_submit(Message::Submit),
             text(format!("it has taken you {} turns so far", &self.turn)),
             button("empty")
         ).into()
     } // figure out how to handle different screens
 }
-
-
-
