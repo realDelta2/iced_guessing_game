@@ -1,48 +1,45 @@
 use iced::executor::Default;
-use iced::{Application, Executor, Renderer};
-use iced::widget::{button, text, text_input, column, TextInput};
+use iced::Application;
+use iced::widget::{button, text, text_input, column};
 use iced::{Command, Settings, Theme};
 
 use rand::Rng;
 use std::cmp::Ordering;
 
 fn main() {
-    GameState::run(Settings::default());
+    GuessingGame::run(Settings::default()).expect("game failed to run");
 }
 
-const GAME_TURNS: u16 = 12;
+const MAX_TURNS: u16 = 12;
 
-struct GameState {
-    text_input_data: String,
+struct GuessingGame {
+    text_input_string: String,
 
-    turn_count: u16,
-    game_ending: String,
+    turn: u16,
     winning_number: i32,
     hint: String,
 }
 
 
-#[derive(Debug)]
-enum EndGameStates {
-    Loss,
-    Won
-}
-
 #[derive(Debug, Clone)]
 enum Message {
-    TextSubmit(String),
+    TextSubmit(String), // this is required for text_input to actually reflect the input value
     Submit
 }
 
-impl Application for GameState {
+impl Application for GuessingGame {
     type Executor = Default;
     type Flags = ();
     type Message = Message;
     type Theme = Theme;
 
-    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
+    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
-            GameState {text_input_data: String::from(""), turn_count: 1, game_ending: String::from(""), winning_number: rand::thread_rng().gen_range(1..=100), hint: String::from("try inputting a value!")},
+            GuessingGame {text_input_string: String::from(""), 
+            turn: 1, 
+            winning_number: rand::thread_rng().gen_range(1..=100), 
+            hint: String::from("try inputting a value!")
+        },
             Command::none()
         )
     }
@@ -53,28 +50,33 @@ impl Application for GameState {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
-            Message::TextSubmit(guess) => self.text_input_data = guess,
+            Message::TextSubmit(guess) => self.text_input_string = guess,
         Message::Submit => {
-            let guess_num = &self.text_input_data.trim().parse::<i32>().expect("borked");
-            self.turn_count += 1;
+            let guess_num = &self.text_input_string.trim().parse::<i32>();
 
-               self.hint = match guess_num.cmp(&self.winning_number) {
-                Ordering::Less => "Too small!",
-                Ordering::Greater => "Too big!",
-                Ordering::Equal => "Congradulations you won" }.to_string()
-            }
-        }
+            self.hint = match guess_num {
+                Ok(guess) => {
+                    match guess.cmp(&self.winning_number) {
+                        Ordering::Less => "Too small!",
+                        Ordering::Greater => "Too big!",
+                        Ordering::Equal => "Congradulations you won" }
+                    },
+                    Err(_) => "Try again"
+            }.to_string(); // re-evaluate error handling method 
+
+            self.turn += 1;
+        } }
         Command::none()
 
 }
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
         column!(
             text(format!("you have 12 guesses to win!  hint: {}", self.hint)),
-            text_input("input guess here", &self.text_input_data).on_input(Message::TextSubmit).on_submit(Message::Submit),
-            button("empty"),
-            text(format!("it has taken you {} turns so far", &self.turn_count))
+            text_input("input guess here", &self.text_input_string).on_input(Message::TextSubmit).on_submit(Message::Submit),
+            text(format!("it has taken you {} turns so far", &self.turn)),
+            button("empty")
         ).into()
-    }
+    } // figure out how to handle different screens
 }
 
 
