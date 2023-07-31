@@ -1,5 +1,5 @@
 use iced::executor::Default;
-use iced::widget::{button, column, text, text_input};
+use iced::widget::{button, column, text, text_input, Column};
 use iced::Application;
 use iced::{Command, Settings, Theme};
 
@@ -89,4 +89,8 @@ impl Application for GuessingGame {
         )
         .into()
     } // figure out how to handle different screens
+}
+
+fn end_screen() -> Column<'a, Message> {
+    column!(text("test"))
 }
