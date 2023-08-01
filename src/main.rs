@@ -1,7 +1,7 @@
 use iced::executor::Default;
 use iced::widget::{button, column, text, text_input};
 use iced::Application;
-use iced::{Command, Settings, Theme};
+use iced::{Command, Settings, Theme, Alignment};
 
 use rand::Rng;
 use std::cmp::Ordering;
@@ -71,7 +71,7 @@ impl Application for GuessingGame {
 
                 self.hint = match guess_num {
                     Ok(guess) => {
-                        let guess_range = 1..100;
+                        let guess_range = 1..=100;
                         if self.hint != String::from("Invalid Input") && guess_range.contains(guess){
                             self.turn -= 1;
                         }
@@ -98,27 +98,28 @@ impl Application for GuessingGame {
         let screen = match self.view_state {
             ViewStates::InGame => {
                 column![
-                    text(format!("you have 12 guesses to win!  hint: {}", self.hint)),
+                    text(format!("you have 12 guesses to win!")),
+                    text(format!("Hint: {}", self.hint)),
                     text_input(&self.hint, &self.text_input_string)
                         .on_input(Message::TextSubmit)
-                        .on_submit(Message::Submit),
-                    text(format!("it has taken you {} turns so far", &self.turn)),
-                    button("empty")
+                        .on_submit(Message::Submit)
+                        .size(20),
+                    text(format!("you have {} turns left", &self.turn))
                 ]
             },
             ViewStates::Won => {
                 column![
-                    text("you won the game"),
+                    text("you won the game").size(20),
                     button("replay!"). on_press(Message::ResetGame)
                 ]
             },
             ViewStates::Lost => {
                 column![
-                    text("you lost the game"),
+                    text("you lost the game").size(20),
                     button("replay!"). on_press(Message::ResetGame)
                 ]
             }
         };
-        screen.into()
-    } // figure out how to handle different screens
+        screen.align_items(Alignment::Center).padding(20).into()
+    }
 }
