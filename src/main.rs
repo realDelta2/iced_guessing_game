@@ -4,7 +4,7 @@ use iced::Application;
 use iced::{Command, Settings, Theme, Alignment};
 
 use rand::Rng;
-use std::cmp::Ordering;
+use iced_guessing_game::Hint;
 
 fn main() {
     GuessingGame::run(Settings::default()).expect("game failed to run");
@@ -75,11 +75,14 @@ impl Application for GuessingGame {
                         if self.hint != String::from("Invalid Input") && guess_range.contains(guess){
                             self.turn -= 1;
                         }
-                        match guess.cmp(&self.winning_number) {
-                            Ordering::Less => "Too small!",
-                            Ordering::Greater => "Too big!",
-                            Ordering::Equal => {self.view_state = ViewStates::Won; "Congradulations you won"},
+
+                        let hint = Hint::new(guess, self.winning_number);
+
+                        if hint.has_won {
+                            self.view_state = ViewStates::Won;
                         }
+
+                        hint.hint
                     }
                     Err(_) => "Invalid Input",
                 }
